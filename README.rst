@@ -7,6 +7,9 @@ django-gnupg-mails provides a class gnupg_mails.message.GnuPGMessage that
 extends Django's django.core.mail.EmailMessage with the functionality to send
 PGP/MIME signed emails.
 
+  * Documentation: http://django-gnupg-mails.readthedocs.org/
+  * Source: https://github.com/jandd/django-gnupg-mails
+
 
 Dependencies
 ============
