@@ -1,0 +1,6 @@
+*.pyc
+.*.swp
+.ropeproject/
+*.egg-info
+dist/
+build/
