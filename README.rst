@@ -14,7 +14,7 @@ PGP/MIME signed emails.
 Dependencies
 ============
 
-  * `python-gnupg <https://pypi.python.org/pypi/python-gnupg>`_ is required for
+  * `gnupg <https://pypi.python.org/pypi/python-gnupg>`_ is required for
     signing the mails
 
 

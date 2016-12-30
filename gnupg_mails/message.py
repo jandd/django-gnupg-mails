@@ -22,9 +22,7 @@ class MIMEUTF8QPText(MIMEMixin, MIMENonMultipart):
         self.set_payload(payload, charset=utf8qp)
 
 
-
 class GnuPGMessage(EmailMessage):
-
     def __init__(self, *args, **kwargs):
         super(GnuPGMessage, self).__init__(*args, **kwargs)
         self.gpg = GPG(gnupghome=settings.GNUPG_HOMEDIR)
@@ -33,7 +31,8 @@ class GnuPGMessage(EmailMessage):
         return "\r\n".join(str(original).splitlines()[1:]) + "\r\n"
 
     def _sign(self, original):
-        sig = self.gpg.sign(self._normalize(original), detach=True)
+        sig = self.gpg.sign(
+            self._normalize(original), detach=True, clearsign=False)
         signature = MIMEApplication(
             str(sig), 'pgp-signature', encode_noop, name='signature.asc')
         signature.add_header('Content-Description', 'Digital signature')
@@ -57,7 +56,8 @@ class GnuPGMessage(EmailMessage):
         if 'message-id' not in header_names:
             msg['Message-ID'] = make_msgid()
         for name, value in self.extra_headers.items():
-            if  name.lower() in ('from', 'to'):  # From and To are already handled
+            if name.lower() in ('from', 'to'):
+                # From and To are already handled
                 continue
             msg[name] = value
 
@@ -73,7 +73,7 @@ class GnuPGMessage(EmailMessage):
         # copy headers from original message to PGP/MIME envelope
         for header in msg.keys():
             if header.lower() not in (
-                'content-disposition', 'content-type', 'mime-version'
+                    'content-disposition', 'content-type', 'mime-version'
             ):
                 for value in msg.get_all(header):
                     wrapper.add_header(header, value)
