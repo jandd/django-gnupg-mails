@@ -61,7 +61,7 @@ class TestGnuPGMessage(TestCase):
                 signature.write(
                     "\r\n".join(str(signature_part).splitlines()[1:]) + "\r\n")
             gpg = GPG(gnupghome=settings.GNUPG_HOMEDIR)
-            with open(sigfile, 'r') as signature_data:
+            with open(sigfile, 'rb') as signature_data:
                 verified = gpg.verify_file(
                     signature_data, data_filename=datafile)
                 self.assertTrue(verified.valid)
