@@ -21,6 +21,7 @@ setup(
         "multipart emails."
     ),
     long_description=open("README.rst").read(),
+    long_description_content_type="text/x-rst",
     url="https://github.com/jandd/django-gnupg-mails",
     packages=find_packages(),
     zip_safe=False,
@@ -31,7 +32,6 @@ setup(
         "Environment :: Web Environment",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
@@ -41,4 +41,5 @@ setup(
         "Topic :: Communications :: Email",
         "Topic :: Security :: Cryptography",
     ],
+    python_requires='>=3.5',
 )
