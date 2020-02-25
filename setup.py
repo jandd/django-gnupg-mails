@@ -11,9 +11,16 @@ if sys.argv[:2] == ["setup.py", "bdist_wheel"]:
     except:
         pass
 
+
+version = {}
+
+with open("gnupg_mails/__init__.py") as fp:
+    exec(fp.read(), version)
+
+
 setup(
     name="django-gnupg-mails",
-    version=__import__("gnupg_mails").__version__,
+    version=version['__version__'],
     author="Jan Dittberner",
     author_email="jan@dittberner.info",
     description=(
