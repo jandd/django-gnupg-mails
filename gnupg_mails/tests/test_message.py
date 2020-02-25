@@ -25,25 +25,34 @@ class TestGnuPGMessage(TestCase):
         gpg.gen_key(key_input)
 
     def test_message_signing(self):
-        message = GnuPGMessage(subject='Test', body='Test body').message()
+        message = GnuPGMessage(subject="Test", body="Test body").message()
+        self._verify(message)
+
+    def test_message_signing_with_trailing_whitespace(self):
+        message = GnuPGMessage(
+            subject="Test", body="Test body\n\n-- \nTrailing signature\nwhite space"
+        ).message()
         self._verify(message)
 
     def test_message_signing_with_cc(self):
         message = GnuPGMessage(
-            subject='Test', body='Test body',
-            to=['receiver@example.org'], cc=['test@example.org']).message()
+            subject="Test",
+            body="Test body",
+            to=["receiver@example.org"],
+            cc=["test@example.org"],
+        ).message()
         self._verify(message)
 
     def test_message_signing_with_extra_headers(self):
-        message = GnuPGMessage(subject='Test', body='Test body')
-        message.extra_headers['X-Miau'] = 'Moo'
-        message.extra_headers['From'] = 'analien@example.org'
-        message.extra_headers['Date'] = formatdate()
-        message.extra_headers['Message-ID'] = 'mysecret_id <test@localhorst>'
+        message = GnuPGMessage(subject="Test", body="Test body")
+        message.extra_headers["X-Miau"] = "Moo"
+        message.extra_headers["From"] = "analien@example.org"
+        message.extra_headers["Date"] = formatdate()
+        message.extra_headers["Message-ID"] = "mysecret_id <test@localhorst>"
         self._verify(message.message())
 
     def test_message_signing_with_attachment(self):
-        message = GnuPGMessage(subject='Test', body='Test body')
+        message = GnuPGMessage(subject="Test", body="Test body")
         message.attach("test.txt", "text data", "text/plain")
         self._verify(message.message())
 
@@ -52,18 +61,15 @@ class TestGnuPGMessage(TestCase):
         datafile = mkstemp()[1]
         sigfile = datafile + ".asc"
         try:
-            with open(datafile, 'w') as data:
+            with open(datafile, "wb") as data:
                 signed_part = message.get_payload(0)
-                data.write(
-                    "\r\n".join(str(signed_part).splitlines()[1:]) + "\r\n")
-            with open(sigfile, 'w') as signature:
+                data.write(signed_part.as_bytes(linesep="\r\n"))
+            with open(sigfile, "wb") as signature:
                 signature_part = message.get_payload(1)
-                signature.write(
-                    "\r\n".join(str(signature_part).splitlines()[1:]) + "\r\n")
+                signature.write(signature_part.as_bytes())
             gpg = GPG(gnupghome=settings.GNUPG_HOMEDIR)
-            with open(sigfile, 'rb') as signature_data:
-                verified = gpg.verify_file(
-                    signature_data, data_filename=datafile)
+            with open(sigfile, "rb") as signature_data:
+                verified = gpg.verify_file(signature_data, data_filename=datafile)
                 self.assertTrue(verified.valid)
         finally:
             os.unlink(datafile)
@@ -75,10 +81,10 @@ class TestGnuPGMessage(TestCase):
         super(TestGnuPGMessage, cls).tearDownClass()
 
 
-if __name__ == '__main__':
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'gnupg_mails.tests.test_settings'
+if __name__ == "__main__":
+    os.environ["DJANGO_SETTINGS_MODULE"] = "gnupg_mails.tests.test_settings"
     django.setup()
     TestRunner = get_runner(settings)
     test_runner = TestRunner()
-    failures = test_runner.run_tests(['gnupg_mails.tests'])
+    failures = test_runner.run_tests(["gnupg_mails.tests"])
     sys.exit(bool(failures))

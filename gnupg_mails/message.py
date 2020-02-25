@@ -14,8 +14,8 @@ from gnupg import GPG
 
 
 class MIMEUTF8QPText(MIMEMixin, MIMENonMultipart):
-    def __init__(self, payload, charset='utf-8'):
-        MIMENonMultipart.__init__(self, 'text', 'plain', charset=charset)
+    def __init__(self, payload, charset="utf-8"):
+        MIMENonMultipart.__init__(self, "text", "plain", charset=charset)
 
         utf8qp = Charset(charset)
         utf8qp.body_encoding = QP
@@ -27,16 +27,13 @@ class GnuPGMessage(EmailMessage):
         super(GnuPGMessage, self).__init__(*args, **kwargs)
         self.gpg = GPG(gnupghome=settings.GNUPG_HOMEDIR)
 
-    def _normalize(self, original):
-        return "\r\n".join(str(original).splitlines()[1:]) + "\r\n"
-
-    def _sign(self, original):
-        sig = self.gpg.sign(
-            self._normalize(original), detach=True, clearsign=False)
+    def _sign(self, original_bytes):
+        sig = self.gpg.sign(original_bytes, detach=True, clearsign=False)
         signature = MIMEApplication(
-            str(sig), 'pgp-signature', encode_noop, name='signature.asc')
-        signature.add_header('Content-Description', 'Digital signature')
-        del signature['MIME-Version']
+            str(sig), "pgp-signature", encode_noop, name="signature.asc"
+        )
+        signature.add_header("Content-Description", "Digital signature")
+        del signature["MIME-Version"]
         return signature
 
     def message(self):
@@ -44,47 +41,47 @@ class GnuPGMessage(EmailMessage):
         msg = MIMEUTF8QPText(self.body, encoding)
         msg = self._create_message(msg)
 
-        msg['Subject'] = self.subject
-        msg['From'] = self.extra_headers.get('From', self.from_email)
-        msg['To'] = self.extra_headers.get('To', ', '.join(self.to))
+        msg["Subject"] = self.subject
+        msg["From"] = self.extra_headers.get("From", self.from_email)
+        msg["To"] = self.extra_headers.get("To", ", ".join(self.to))
         if self.cc:
-            msg['Cc'] = ', '.join(self.cc)
+            msg["Cc"] = ", ".join(self.cc)
 
         header_names = [key.lower() for key in self.extra_headers]
-        if 'date' not in header_names:
-            msg['Date'] = formatdate()
-        if 'message-id' not in header_names:
-            msg['Message-ID'] = make_msgid()
+        if "date" not in header_names:
+            msg["Date"] = formatdate()
+        if "message-id" not in header_names:
+            msg["Message-ID"] = make_msgid()
         for name, value in self.extra_headers.items():
-            if name.lower() in ('from', 'to'):
+            if name.lower() in ("from", "to"):
                 # From and To are already handled
                 continue
             msg[name] = value
 
-        del msg['MIME-Version']
+        del msg["MIME-Version"]
 
         wrapper = SafeMIMEMultipart(
-            'signed', protocol='application/pgp-signature',
-            micalg='pgp-sha512')
-        wrapper.preamble = (
-            "This is an OpenPGP/MIME signed message (RFC 4880 and 3156)"
+            "signed", protocol="application/pgp-signature", micalg="pgp-sha512"
         )
+        wrapper.preamble = "This is an OpenPGP/MIME signed message (RFC 4880 and 3156)"
 
         # copy headers from original message to PGP/MIME envelope
         for header in msg.keys():
             if header.lower() not in (
-                    'content-disposition', 'content-type', 'mime-version'
+                "content-disposition",
+                "content-type",
+                "mime-version",
             ):
                 for value in msg.get_all(header):
                     wrapper.add_header(header, value)
                 del msg[header]
 
         for part in msg.walk():
-            del part['MIME-Version']
+            del part["MIME-Version"]
 
-        signature = self._sign(msg)
+        signature = self._sign(msg.as_bytes(linesep="\r\n"))
 
-        wrapper['Content-Disposition'] = 'inline'
+        wrapper["Content-Disposition"] = "inline"
         wrapper.attach(msg)
         wrapper.attach(signature)
 
