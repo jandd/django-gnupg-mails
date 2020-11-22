@@ -43,6 +43,16 @@ class TestGnuPGMessage(TestCase):
         ).message()
         self._verify(message)
 
+    def test_message_signing_with_long_quoted_subject(self):
+        message = GnuPGMessage(
+            subject=(
+                "Test recipient with Metäl Ümläuts from a L33t company"
+                " that has much to say and will not fit in a single line"
+            ),
+            body="Test body",
+        ).message()
+        self._verify(message)
+
     def test_message_signing_with_extra_headers(self):
         message = GnuPGMessage(subject="Test", body="Test body")
         message.extra_headers["X-Miau"] = "Moo"
@@ -53,6 +63,17 @@ class TestGnuPGMessage(TestCase):
 
     def test_message_signing_with_attachment(self):
         message = GnuPGMessage(subject="Test", body="Test body")
+        message.attach("test.txt", "text data", "text/plain")
+        self._verify(message.message())
+
+    def test_message_signing_with_long_subject_and_attachment(self):
+        message = GnuPGMessage(
+            subject=(
+                "Test recipient with Metäl Ümläuts from a L33t company"
+                " that has much to say and will not fit in a single line"
+            ),
+            body="Test body",
+        )
         message.attach("test.txt", "text data", "text/plain")
         self._verify(message.message())
 

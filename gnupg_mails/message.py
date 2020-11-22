@@ -41,23 +41,6 @@ class GnuPGMessage(EmailMessage):
         msg = MIMEUTF8QPText(self.body, encoding)
         msg = self._create_message(msg)
 
-        msg["Subject"] = self.subject
-        msg["From"] = self.extra_headers.get("From", self.from_email)
-        msg["To"] = self.extra_headers.get("To", ", ".join(self.to))
-        if self.cc:
-            msg["Cc"] = ", ".join(self.cc)
-
-        header_names = [key.lower() for key in self.extra_headers]
-        if "date" not in header_names:
-            msg["Date"] = formatdate()
-        if "message-id" not in header_names:
-            msg["Message-ID"] = make_msgid()
-        for name, value in self.extra_headers.items():
-            if name.lower() in ("from", "to"):
-                # From and To are already handled
-                continue
-            msg[name] = value
-
         del msg["MIME-Version"]
 
         wrapper = SafeMIMEMultipart(
@@ -75,6 +58,23 @@ class GnuPGMessage(EmailMessage):
                 for value in msg.get_all(header):
                     wrapper.add_header(header, value)
                 del msg[header]
+
+        wrapper["Subject"] = self.subject
+        wrapper["From"] = self.extra_headers.get("From", self.from_email)
+        wrapper["To"] = self.extra_headers.get("To", ", ".join(self.to))
+        if self.cc:
+            wrapper["Cc"] = ", ".join(self.cc)
+
+        header_names = [key.lower() for key in self.extra_headers]
+        if "date" not in header_names:
+            wrapper["Date"] = formatdate()
+        if "message-id" not in header_names:
+            wrapper["Message-ID"] = make_msgid()
+        for name, value in self.extra_headers.items():
+            if name.lower() in ("from", "to"):
+                # From and To are already handled
+                continue
+            wrapper[name] = value
 
         for part in msg.walk():
             del part["MIME-Version"]
